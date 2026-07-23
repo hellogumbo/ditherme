@@ -305,6 +305,20 @@ input[type="range"] { width: 100%; margin: 14px 0 0; cursor: ew-resize; }
 .camera-button:active:not(:disabled) { background: color-mix(in srgb, var(--acid) 82%, black); }
 .camera-button:disabled { opacity: .58; cursor: wait; }
 .camera-button b { font-family: inherit; font-size: 31px; }
+.stage-camera-button {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  min-width: 230px;
+  margin: 0;
+  justify-content: center;
+  gap: 12px;
+  transform: translate(-50%, -50%);
+  border-color: var(--paper);
+}
+.panel-camera-button { margin: 14px 0 2px; }
 
 .privacy { margin: 12px 0 0; color: var(--muted); text-align: center; font-size: 9px; line-height: 1.5; }
 
@@ -406,7 +420,9 @@ footer a:hover { color: var(--gumbo-blue); }
   .swatches { grid-template-columns: repeat(5, 32px); }
   .swatches button { width: 32px; }
   .panel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
-  .camera-button { min-height: 48px; margin-top: 0; font-size: 17px; }
+  .camera-button { min-height: 48px; font-size: 17px; }
+  .stage-camera-button { min-width: 190px; margin: 0; }
+  .panel-camera-button { margin: 10px 0 0; }
   .capture-control { padding: 0; border: 0; }
   .capture-button, .download-button { min-height: 48px; font-size: 10px; }
   .privacy { grid-column: 1 / -1; margin-top: 0; }

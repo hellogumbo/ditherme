@@ -250,6 +250,13 @@ export default function Home() {
             {message}
           </div>
 
+          {cameraState !== "live" && (
+            <button className="camera-button stage-camera-button" type="button" onClick={startCamera} disabled={cameraState === "requesting"}>
+              <CameraIcon />
+              <span>{cameraState === "requesting" ? "Starting…" : "Start camera"}</span>
+            </button>
+          )}
+
           <aside className={`control-card overlay-controls${controlsOpen ? " is-open" : " is-closed"}`} aria-label="Camera and dither controls">
             <div className="control-heading">
               <span>Controls</span>
@@ -260,6 +267,12 @@ export default function Home() {
 
             {controlsOpen && (
               <div className="control-body">
+                {cameraState === "live" && (
+                  <button className="camera-button panel-camera-button" type="button" onClick={stopCamera}>
+                    <span>Stop camera</span>
+                  </button>
+                )}
+
                 <div className="panel-fields">
                   <label className="select-control">
                     <span>Effect</span>
@@ -303,10 +316,6 @@ export default function Home() {
                 </div>
 
                 <div className="panel-actions">
-                  <button className="camera-button" type="button" onClick={cameraState === "live" ? stopCamera : startCamera} disabled={cameraState === "requesting"}>
-                    <span>{cameraState === "live" ? "Stop camera" : cameraState === "requesting" ? "Starting…" : "Start camera"}</span>
-                  </button>
-
                   <div className="capture-control">
                     {captureUrl ? (
                       <div className="capture-result">
