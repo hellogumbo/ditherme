@@ -55,7 +55,6 @@ Each video frame is sampled at the selected pixel size, converted to luminance, 
 
 - [React 19](https://react.dev)
 - [Next.js 16](https://nextjs.org)
-- [vinext](https://github.com/cloudflare/vinext)
 - Canvas API and `getUserMedia`
 - PP Mondwest and PP Neue Montreal Mono
 
