@@ -286,7 +286,7 @@ h1 span { color: var(--acid); }
   z-index: 5;
   top: 12px;
   right: 12px;
-  bottom: 12px;
+  bottom: auto;
   width: min(520px, calc(100% - 24px));
   padding: 14px;
   border: 2px solid var(--ink);
@@ -294,7 +294,7 @@ h1 span { color: var(--acid); }
   overflow: hidden;
   background: color-mix(in srgb, var(--paper) 94%, transparent);
   backdrop-filter: blur(14px);
-  transition: width 160ms ease, bottom 160ms ease;
+  transition: width 160ms ease;
 }
 
 .control-card.is-closed {
@@ -479,14 +479,14 @@ footer a:hover { color: var(--gumbo-blue); }
   .control-card.is-closed {
     top: 8px;
     right: 8px;
-    bottom: 8px;
+    bottom: auto;
     left: 8px;
     width: auto;
     padding: 10px;
     border-width: 2px;
     border-radius: 8px;
   }
-  .control-card.is-closed { top: auto; left: auto; width: min(220px, calc(100% - 16px)); }
+  .control-card.is-closed { top: auto; bottom: 8px; left: auto; width: min(220px, calc(100% - 16px)); }
   .control-heading { padding-bottom: 9px; font-size: 20px; }
   .control-card.is-closed .control-heading { padding-bottom: 0; }
   .panel-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 10px; }

@@ -168,6 +168,7 @@ export default function Home() {
   const [countdownAction, setCountdownAction] = useState<"photo" | "gif" | null>(null);
   const [recordingRemaining, setRecordingRemaining] = useState<number | null>(null);
   const [isEncodingGif, setIsEncodingGif] = useState(false);
+  const [captureInProgress, setCaptureInProgress] = useState<"photo" | "gif" | null>(null);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [effect, setEffect] = useState<DitherEffect>("bayer");
 
@@ -177,6 +178,7 @@ export default function Home() {
     setCountdownAction(null);
     setRecordingRemaining(null);
     setIsEncodingGif(false);
+    setCaptureInProgress(null);
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
@@ -258,27 +260,36 @@ export default function Home() {
     if (!source || !video || cameraState !== "live" || countdown !== null || recordingRemaining !== null || isEncodingGif) return;
 
     const captureRun = ++captureRunRef.current;
-    if (!await runCountdown(captureRun, "photo")) return;
+    const controlsWereOpen = controlsOpen;
+    setControlsOpen(false);
+    setCaptureInProgress("photo");
+    try {
+      if (!await runCountdown(captureRun, "photo")) return;
 
-    const output = document.createElement("canvas");
-    output.width = video.videoWidth;
-    output.height = video.videoHeight;
-    const context = output.getContext("2d");
-    if (!context) return;
+      const output = document.createElement("canvas");
+      output.width = video.videoWidth;
+      output.height = video.videoHeight;
+      const context = output.getContext("2d");
+      if (!context) return;
 
-    context.imageSmoothingEnabled = false;
-    if (mirrored) {
-      context.translate(output.width, 0);
-      context.scale(-1, 1);
-    }
-    context.drawImage(source, 0, 0, output.width, output.height);
-    output.toBlob((blob) => {
-      if (!blob) return;
+      context.imageSmoothingEnabled = false;
+      if (mirrored) {
+        context.translate(output.width, 0);
+        context.scale(-1, 1);
+      }
+      context.drawImage(source, 0, 0, output.width, output.height);
+      const blob = await new Promise<Blob | null>((resolve) => output.toBlob(resolve, "image/png"));
+      if (!blob || captureRunRef.current !== captureRun) return;
       setCaptureResult((current) => {
         if (current) URL.revokeObjectURL(current.url);
         return { url: URL.createObjectURL(blob), kind: "photo", size: blob.size, filename: `dither-me-${Date.now()}.png` };
       });
-    }, "image/png");
+    } finally {
+      if (captureRunRef.current === captureRun) {
+        setCaptureInProgress(null);
+        if (controlsWereOpen) setControlsOpen(true);
+      }
+    }
   };
 
   const captureGif = async () => {
@@ -286,10 +297,14 @@ export default function Home() {
     if (!source || !source.width || !source.height || cameraState !== "live" || countdown !== null || recordingRemaining !== null || isEncodingGif) return;
 
     const captureRun = ++captureRunRef.current;
+    const controlsWereOpen = controlsOpen;
     let failed = false;
+    setControlsOpen(false);
+    setCaptureInProgress("gif");
     try {
-      const { GIFEncoder, applyPalette } = await import("gifenc");
+      const encoderModule = import("gifenc");
       if (!await runCountdown(captureRun, "gif")) return;
+      const { GIFEncoder, applyPalette } = await encoderModule;
 
       const outputWidth = 320;
       const outputHeight = Math.max(1, Math.round(source.height * (outputWidth / source.width)));
@@ -356,12 +371,14 @@ export default function Home() {
         setCountdownAction(null);
         setRecordingRemaining(null);
         setIsEncodingGif(false);
+        setCaptureInProgress(null);
+        if (controlsWereOpen) setControlsOpen(true);
         if (!failed && streamRef.current?.active) setMessage("Live · processed on this device");
       }
     }
   };
 
-  const captureBusy = countdown !== null || recordingRemaining !== null || isEncodingGif;
+  const captureBusy = captureInProgress !== null || countdown !== null || recordingRemaining !== null || isEncodingGif;
 
   return (
     <main className="app-shell" style={{ "--acid": accentColor } as CSSProperties}>
@@ -378,7 +395,7 @@ export default function Home() {
       <section className="intro" id="top">
         <p className="eyebrow">Turn your camera into one-bit moving type.</p>
         <h1>Your face, <span>reduced beautifully.</span></h1>
-        <p className="lede">A tiny live studio that redraws every frame with your choice of pixel dither. Nothing is recorded or uploaded.</p>
+        <p className="lede">A tiny live studio that redraws every frame with your choice of pixel dither. Nothing leaves your device.</p>
       </section>
 
       <section className="studio" aria-label="Camera dither studio">
@@ -421,7 +438,7 @@ export default function Home() {
             </div>
           )}
 
-          <aside className={`control-card overlay-controls${controlsOpen ? " is-open" : " is-closed"}`} aria-label="Camera and dither controls">
+          {!captureBusy && <aside className={`control-card overlay-controls${controlsOpen ? " is-open" : " is-closed"}`} aria-label="Camera and dither controls">
             <div className="control-heading">
               <span>Controls</span>
               <button type="button" onClick={() => setControlsOpen((open) => !open)} aria-expanded={controlsOpen}>
@@ -507,7 +524,7 @@ export default function Home() {
                 </div>
               </div>
             )}
-          </aside>
+          </aside>}
         </div>
       </section>
 
