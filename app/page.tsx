@@ -385,7 +385,10 @@ export default function Home() {
       </section>
 
       <footer>
-        <p>An open source project by <a href={GUMBO_URL} target="_blank" rel="noreferrer">Gumbo</a>.</p>
+        <div className="footer-credits">
+          <p>An open source project by <a href={GUMBO_URL} target="_blank" rel="noreferrer">Gumbo</a>.</p>
+          <p>Built with <a href="https://canvasui.dev/docs/components/dithered-object" target="_blank" rel="noreferrer">Canvas UI Dithered Object</a>.</p>
+        </div>
         <div className="pixel-row" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <i key={index} />)}</div>
       </footer>
     </main>

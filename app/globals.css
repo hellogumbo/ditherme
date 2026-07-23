@@ -383,6 +383,8 @@ input[type="range"] { width: 100%; margin: 10px 0 0; cursor: ew-resize; }
 .capture-result img { display: block; width: 100%; max-height: 170px; aspect-ratio: 4 / 3; border: 1px solid #d0d0d0; border-radius: 6px; object-fit: cover; image-rendering: pixelated; background: var(--ink); }
 
 footer { min-height: 130px; display: flex; align-items: center; justify-content: space-between; gap: 24px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.footer-credits { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.footer-credits p { margin: 0; }
 footer a { color: var(--ink); text-decoration-thickness: 1px; text-underline-offset: 4px; }
 footer a:hover { color: var(--gumbo-blue); }
 .pixel-row { display: flex; gap: 7px; }

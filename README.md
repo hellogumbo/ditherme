@@ -56,6 +56,7 @@ Each video frame is sampled at the selected pixel size, converted to luminance, 
 - [React 19](https://react.dev)
 - [Next.js 16](https://nextjs.org)
 - Canvas API and `getUserMedia`
+- [Canvas UI — Dithered Object](https://canvasui.dev/docs/components/dithered-object)
 - PP Mondwest and PP Neue Montreal Mono
 
 ## Deployment
