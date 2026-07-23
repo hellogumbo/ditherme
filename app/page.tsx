@@ -115,6 +115,7 @@ export default function Home() {
   const [mirrored, setMirrored] = useState(true);
   const [accentColor, setAccentColor] = useState("#c8ff3d");
   const [captureUrl, setCaptureUrl] = useState<string | null>(null);
+  const [controlsOpen, setControlsOpen] = useState(true);
 
   const stopCamera = useCallback(() => {
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
@@ -213,7 +214,7 @@ export default function Home() {
 
       <section className="intro" id="top">
         <p className="eyebrow">Turn your camera into one-bit moving type.</p>
-        <h1>Your face,<br /><span>reduced beautifully.</span></h1>
+        <h1>Your face, <span>reduced beautifully.</span></h1>
         <p className="lede">A tiny live studio that redraws every frame with an ordered Bayer matrix. Nothing is recorded or uploaded.</p>
       </section>
 
@@ -238,104 +239,82 @@ export default function Home() {
             <i className={cameraState === "live" ? "active" : ""} />
             {message}
           </div>
-        </div>
 
-        <aside className="control-card" aria-label="Dither controls">
-          <div className="control-heading">
-            <span>Controls</span>
-            <strong>01—05</strong>
-          </div>
-
-          <label className="select-control">
-            <span>Effect</span>
-            <select aria-label="Dither effect" defaultValue="bayer">
-              <option value="bayer">Bayer 4×4</option>
-            </select>
-          </label>
-
-          <label className="range-control">
-            <span>Pixel size <output>{pixelSize} px</output></span>
-            <input type="range" min="2" max="14" value={pixelSize} onChange={(event) => setPixelSize(Number(event.target.value))} />
-          </label>
-
-          <label className="range-control">
-            <span>Contrast <output>{contrast}%</output></span>
-            <input type="range" min="60" max="190" value={contrast} onChange={(event) => setContrast(Number(event.target.value))} />
-          </label>
-
-          <label className="range-control">
-            <span>Threshold <output>{threshold}</output></span>
-            <input type="range" min="70" max="190" value={threshold} onChange={(event) => setThreshold(Number(event.target.value))} />
-          </label>
-
-          <label className="toggle-control">
-            <span>Mirror camera</span>
-            <input type="checkbox" checked={mirrored} onChange={(event) => setMirrored(event.target.checked)} />
-            <i aria-hidden="true" />
-          </label>
-
-          <button
-            className="camera-button"
-            type="button"
-            onClick={cameraState === "live" ? stopCamera : startCamera}
-            disabled={cameraState === "requesting"}
-          >
-            <span>{cameraState === "live" ? "Stop camera" : cameraState === "requesting" ? "Starting…" : "Start camera"}</span>
-            <b aria-hidden="true">→</b>
-          </button>
-
-          <p className="privacy">Your camera stays on this device.<br />No account. No upload. No trace.</p>
-        </aside>
-
-        <aside className="control-card creative-card" aria-label="Color and export controls">
-          <div className="control-heading">
-            <span>Make it yours</span>
-            <strong>06—07</strong>
-          </div>
-
-          <div className="color-control">
-            <div className="control-label"><span>Ink color</span><output>{accentColor.toUpperCase()}</output></div>
-            <label className="color-well">
-              <input type="color" value={accentColor} onChange={(event) => setAccentColor(event.target.value)} aria-label="Choose dither color" />
-              <span style={{ backgroundColor: accentColor }} aria-hidden="true" />
-              <b>Pick a color</b>
-            </label>
-            <div className="swatches" aria-label="Color presets">
-              {COLOR_PRESETS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  className={color === accentColor ? "selected" : ""}
-                  style={{ backgroundColor: color }}
-                  aria-label={`Use ${color}`}
-                  aria-pressed={color === accentColor}
-                  onClick={() => setAccentColor(color)}
-                />
-              ))}
+          <aside className={`control-card overlay-controls${controlsOpen ? " is-open" : " is-closed"}`} aria-label="Camera and dither controls">
+            <div className="control-heading">
+              <span>Controls</span>
+              <button type="button" onClick={() => setControlsOpen((open) => !open)} aria-expanded={controlsOpen}>
+                {controlsOpen ? "Minimize" : "Open controls"}
+              </button>
             </div>
-          </div>
 
-          <div className="capture-control">
-            <div className="control-label"><span>Still frame</span><output>PNG</output></div>
-            {captureUrl ? (
-              <div className="capture-result">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={captureUrl} alt="Your captured dithered photo" />
-                <a className="download-button" href={captureUrl} download={`dither-me-${Date.now()}.png`}>
-                  <span><DownloadIcon /> Download image</span>
-                </a>
-                <button className="retake-button" type="button" onClick={capturePhoto}>Capture another</button>
+            {controlsOpen && (
+              <div className="control-body">
+                <div className="panel-fields">
+                  <label className="select-control">
+                    <span>Effect</span>
+                    <select aria-label="Dither effect" defaultValue="bayer"><option value="bayer">Bayer 4×4</option></select>
+                  </label>
+
+                  <label className="range-control">
+                    <span>Pixel size <output>{pixelSize} px</output></span>
+                    <input type="range" min="2" max="14" value={pixelSize} onChange={(event) => setPixelSize(Number(event.target.value))} />
+                  </label>
+
+                  <label className="range-control">
+                    <span>Contrast <output>{contrast}%</output></span>
+                    <input type="range" min="60" max="190" value={contrast} onChange={(event) => setContrast(Number(event.target.value))} />
+                  </label>
+
+                  <label className="range-control">
+                    <span>Threshold <output>{threshold}</output></span>
+                    <input type="range" min="70" max="190" value={threshold} onChange={(event) => setThreshold(Number(event.target.value))} />
+                  </label>
+
+                  <label className="toggle-control">
+                    <span>Mirror camera</span>
+                    <input type="checkbox" checked={mirrored} onChange={(event) => setMirrored(event.target.checked)} />
+                    <i aria-hidden="true" />
+                  </label>
+
+                  <div className="color-control">
+                    <div className="control-label"><span>Ink color</span><output>{accentColor.toUpperCase()}</output></div>
+                    <label className="color-well">
+                      <input type="color" value={accentColor} onChange={(event) => setAccentColor(event.target.value)} aria-label="Choose dither color" />
+                      <span style={{ backgroundColor: accentColor }} aria-hidden="true" />
+                      <b>Pick a color</b>
+                    </label>
+                    <div className="swatches" aria-label="Color presets">
+                      {COLOR_PRESETS.map((color) => (
+                        <button key={color} type="button" className={color === accentColor ? "selected" : ""} style={{ backgroundColor: color }} aria-label={`Use ${color}`} aria-pressed={color === accentColor} onClick={() => setAccentColor(color)} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="panel-actions">
+                  <button className="camera-button" type="button" onClick={cameraState === "live" ? stopCamera : startCamera} disabled={cameraState === "requesting"}>
+                    <span>{cameraState === "live" ? "Stop camera" : cameraState === "requesting" ? "Starting…" : "Start camera"}</span>
+                  </button>
+
+                  <div className="capture-control">
+                    {captureUrl ? (
+                      <div className="capture-result">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={captureUrl} alt="Your captured dithered photo" />
+                        <a className="download-button" href={captureUrl} download={`dither-me-${Date.now()}.png`}><span><DownloadIcon /> Download image</span></a>
+                        <button className="retake-button" type="button" onClick={capturePhoto}>Capture another</button>
+                      </div>
+                    ) : (
+                      <button className="capture-button" type="button" onClick={capturePhoto} disabled={cameraState !== "live"}><CameraIcon /> Capture photo</button>
+                    )}
+                  </div>
+                  <p className="privacy">Private by default. Nothing leaves this device.</p>
+                </div>
               </div>
-            ) : (
-              <>
-                <div className="capture-empty"><CameraIcon /><p>Your processed frame will appear here.</p></div>
-                <button className="capture-button" type="button" onClick={capturePhoto} disabled={cameraState !== "live"}>
-                  <CameraIcon /> Capture photo
-                </button>
-              </>
             )}
-          </div>
-        </aside>
+          </aside>
+        </div>
       </section>
 
       <footer>
