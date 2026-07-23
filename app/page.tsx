@@ -12,6 +12,7 @@ const BAYER_4X4 = [
 type CameraState = "idle" | "requesting" | "live" | "error";
 
 const COLOR_PRESETS = ["#c8ff3d", "#2563eb", "#d65c73", "#6a9d62", "#f97316"];
+const GUMBO_URL = "https://hellogumbo.com/?utm_source=ditherme&utm_medium=referral&utm_campaign=open_source";
 
 function hexToRgb(hex: string) {
   const normalized = hex.replace("#", "");
@@ -206,7 +207,7 @@ export default function Home() {
       <header className="masthead">
         <div className="brand-lockup">
           <a className="wordmark" href="#top" aria-label="Dither me home">dither me<span aria-hidden="true">.</span></a>
-          <span className="gumbo-by">by <GumboWordmark /></span>
+          <a className="gumbo-by" href={GUMBO_URL} target="_blank" rel="noreferrer" aria-label="Dither me by Gumbo">by <GumboWordmark /></a>
         </div>
         <p>real-time browser dithering</p>
         <span className="edition">DM—01</span>
@@ -318,7 +319,7 @@ export default function Home() {
       </section>
 
       <footer>
-        <p>Made for faces, gestures, and happy accidents.</p>
+        <p>An open source project by <a href={GUMBO_URL} target="_blank" rel="noreferrer">Gumbo</a>.</p>
         <div className="pixel-row" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <i key={index} />)}</div>
       </footer>
     </main>

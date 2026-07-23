@@ -1,6 +1,6 @@
 # dither me.
 
-**A real-time, one-bit webcam studio by [Gumbo](https://hellogumbo.com).**
+**A real-time, one-bit webcam studio by [Gumbo](https://hellogumbo.com/?utm_source=ditherme&utm_medium=referral&utm_campaign=open_source).**
 
 [Open dither me →](https://ditherme.vercel.app)
 
@@ -63,6 +63,10 @@ Each video frame is sampled at the selected pixel size, converted to luminance, 
 
 The `main` branch deploys automatically to Vercel at [ditherme.vercel.app](https://ditherme.vercel.app).
 
+## License
+
+Released under the [MIT License](./LICENSE).
+
 ---
 
-Made by [Gumbo](https://hellogumbo.com) — an AI-first product and engineering studio.
+An open source project by [Gumbo](https://hellogumbo.com/?utm_source=ditherme&utm_medium=referral&utm_campaign=open_source).
