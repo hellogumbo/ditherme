@@ -13,7 +13,7 @@ Nothing is recorded. Nothing is uploaded.
 ## What it does
 
 - Processes the webcam in real time with the Canvas API
-- Applies an ordered Bayer 4×4 dither to every frame
+- Switches live between Bayer 4×4, Floyd–Steinberg diffusion, and hard threshold effects
 - Adjusts pixel size, contrast, and threshold live
 - Changes the dither ink color with a picker and preset palette
 - Mirrors the camera for a natural selfie view
@@ -49,7 +49,7 @@ npm test         # Build and run the rendered HTML test
 
 ## How the effect works
 
-Each video frame is sampled at the selected pixel size, converted to luminance, adjusted for contrast, and compared against a Bayer 4×4 threshold matrix. The result is mapped to two colors: near-black and the selected ink color. A second canvas scales the captured result back to the camera's full resolution with smoothing disabled, preserving the crisp pixel texture.
+Each video frame is sampled at the selected pixel size, converted to luminance, and adjusted for contrast. The selected effect then applies an ordered Bayer matrix, Floyd–Steinberg error diffusion, or a direct threshold. The result is mapped to two colors: near-black and the selected ink color. A second canvas scales captured frames back to the camera's full resolution with smoothing disabled, preserving the crisp pixel texture.
 
 ## Built with
 

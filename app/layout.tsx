@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const ogImage = `${protocol}://${host}/og.png`;
   const title = "dither me — real-time camera dithering";
-  const description = "Turn your webcam into a live one-bit Bayer dither. Private, playful, and processed entirely in your browser.";
+  const description = "Turn your webcam into a live one-bit dither. Private, playful, and processed entirely in your browser.";
 
   return {
     title,

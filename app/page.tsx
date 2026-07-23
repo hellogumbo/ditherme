@@ -10,8 +10,14 @@ const BAYER_4X4 = [
 ];
 
 type CameraState = "idle" | "requesting" | "live" | "error";
+type DitherEffect = "bayer" | "floyd" | "threshold";
 
 const COLOR_PRESETS = ["#c8ff3d", "#2563eb", "#d65c73", "#6a9d62", "#f97316"];
+const EFFECTS: Array<{ id: DitherEffect; label: string; detail: string }> = [
+  { id: "bayer", label: "Bayer", detail: "4×4 matrix" },
+  { id: "floyd", label: "Floyd", detail: "diffusion" },
+  { id: "threshold", label: "Hard", detail: "threshold" },
+];
 const GUMBO_URL = "https://hellogumbo.com/?utm_source=ditherme&utm_medium=referral&utm_campaign=open_source";
 
 function hexToRgb(hex: string) {
@@ -64,6 +70,7 @@ function paintDitheredFrame(
   contrast: number,
   threshold: number,
   accentColor: string,
+  effect: DitherEffect,
 ) {
   if (video.readyState < 2 || !video.videoWidth) return;
 
@@ -87,6 +94,8 @@ function paintDitheredFrame(
   const frame = scratchContext.getImageData(0, 0, sampleWidth, sampleHeight);
   const factor = contrast / 100;
   const accent = hexToRgb(accentColor);
+  const luminanceMap = new Float32Array(sampleWidth * sampleHeight);
+  const outputMap = new Uint8Array(sampleWidth * sampleHeight);
 
   for (let y = 0; y < sampleHeight; y += 1) {
     for (let x = 0; x < sampleWidth; x += 1) {
@@ -95,17 +104,44 @@ function paintDitheredFrame(
         frame.data[index] * 0.2126 +
         frame.data[index + 1] * 0.7152 +
         frame.data[index + 2] * 0.0722;
-      const adjusted = Math.max(0, Math.min(255, (luminance - 128) * factor + 128));
-      const orderedOffset = (BAYER_4X4[(y % 4) * 4 + (x % 4)] / 16 - 0.5) * 92;
-      const ink = adjusted > threshold + orderedOffset ? 255 : 0;
-
-      // Acid-lime paper against near-black ink.
-      frame.data[index] = ink ? accent.r : 23;
-      frame.data[index + 1] = ink ? accent.g : 26;
-      frame.data[index + 2] = ink ? accent.b : 20;
-      frame.data[index + 3] = 255;
+      luminanceMap[y * sampleWidth + x] = Math.max(0, Math.min(255, (luminance - 128) * factor + 128));
     }
   }
+
+  if (effect === "floyd") {
+    const diffusion = new Float32Array(luminanceMap);
+    for (let y = 0; y < sampleHeight; y += 1) {
+      for (let x = 0; x < sampleWidth; x += 1) {
+        const position = y * sampleWidth + x;
+        const value = diffusion[position] > threshold ? 255 : 0;
+        const error = diffusion[position] - value;
+        outputMap[position] = value;
+        if (x + 1 < sampleWidth) diffusion[position + 1] += error * (7 / 16);
+        if (y + 1 < sampleHeight) {
+          if (x > 0) diffusion[position + sampleWidth - 1] += error * (3 / 16);
+          diffusion[position + sampleWidth] += error * (5 / 16);
+          if (x + 1 < sampleWidth) diffusion[position + sampleWidth + 1] += error * (1 / 16);
+        }
+      }
+    }
+  } else {
+    for (let y = 0; y < sampleHeight; y += 1) {
+      for (let x = 0; x < sampleWidth; x += 1) {
+        const position = y * sampleWidth + x;
+        const orderedOffset = effect === "bayer" ? (BAYER_4X4[(y % 4) * 4 + (x % 4)] / 16 - 0.5) * 92 : 0;
+        outputMap[position] = luminanceMap[position] > threshold + orderedOffset ? 255 : 0;
+      }
+    }
+  }
+
+  for (let position = 0; position < outputMap.length; position += 1) {
+    const index = position * 4;
+    const ink = outputMap[position] === 255;
+    frame.data[index] = ink ? accent.r : 23;
+    frame.data[index + 1] = ink ? accent.g : 26;
+    frame.data[index + 2] = ink ? accent.b : 20;
+    frame.data[index + 3] = 255;
+    }
 
   outputContext.putImageData(frame, 0, 0);
 }
@@ -124,7 +160,8 @@ export default function Home() {
   const [mirrored, setMirrored] = useState(true);
   const [accentColor, setAccentColor] = useState("#c8ff3d");
   const [captureUrl, setCaptureUrl] = useState<string | null>(null);
-  const [controlsOpen, setControlsOpen] = useState(true);
+  const [controlsOpen, setControlsOpen] = useState(false);
+  const [effect, setEffect] = useState<DitherEffect>("bayer");
 
   const stopCamera = useCallback(() => {
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
@@ -144,7 +181,7 @@ export default function Home() {
       const canvas = canvasRef.current;
       const scratch = scratchRef.current;
       if (video && canvas && scratch) {
-        paintDitheredFrame(video, canvas, scratch, pixelSize, contrast, threshold, accentColor);
+        paintDitheredFrame(video, canvas, scratch, pixelSize, contrast, threshold, accentColor, effect);
       }
       frameRef.current = requestAnimationFrame(draw);
     };
@@ -152,7 +189,7 @@ export default function Home() {
     return () => {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     };
-  }, [accentColor, cameraState, contrast, pixelSize, threshold]);
+  }, [accentColor, cameraState, contrast, effect, pixelSize, threshold]);
 
   useEffect(() => () => {
     if (captureUrl) URL.revokeObjectURL(captureUrl);
@@ -177,6 +214,7 @@ export default function Home() {
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
       setCameraState("live");
+      setControlsOpen(true);
       setMessage("Live · processed on this device");
     } catch {
       setCameraState("error");
@@ -225,7 +263,7 @@ export default function Home() {
       <section className="intro" id="top">
         <p className="eyebrow">Turn your camera into one-bit moving type.</p>
         <h1>Your face, <span>reduced beautifully.</span></h1>
-        <p className="lede">A tiny live studio that redraws every frame with an ordered Bayer matrix. Nothing is recorded or uploaded.</p>
+        <p className="lede">A tiny live studio that redraws every frame with your choice of pixel dither. Nothing is recorded or uploaded.</p>
       </section>
 
       <section className="studio" aria-label="Camera dither studio">
@@ -243,7 +281,7 @@ export default function Home() {
           )}
           <div className="preview-topline">
             <span>CAMERA / 01</span>
-            <span>BAYER 4×4</span>
+            <span>{EFFECTS.find((item) => item.id === effect)?.label} / LIVE</span>
           </div>
           <div className="live-chip">
             <i className={cameraState === "live" ? "active" : ""} />
@@ -251,10 +289,13 @@ export default function Home() {
           </div>
 
           {cameraState !== "live" && (
-            <button className="camera-button stage-camera-button" type="button" onClick={startCamera} disabled={cameraState === "requesting"}>
-              <CameraIcon />
-              <span>{cameraState === "requesting" ? "Starting…" : "Start camera"}</span>
-            </button>
+            <div className="camera-gate">
+              <button className="camera-button stage-camera-button" type="button" onClick={startCamera} disabled={cameraState === "requesting"}>
+                <CameraIcon />
+                <span>{cameraState === "requesting" ? "Starting…" : "Start camera"}</span>
+              </button>
+              <p>Private, live, and processed on this device.</p>
+            </div>
           )}
 
           <aside className={`control-card overlay-controls${controlsOpen ? " is-open" : " is-closed"}`} aria-label="Camera and dither controls">
@@ -274,10 +315,17 @@ export default function Home() {
                 )}
 
                 <div className="panel-fields">
-                  <label className="select-control">
-                    <span>Effect</span>
-                    <select aria-label="Dither effect" defaultValue="bayer"><option value="bayer">Bayer 4×4</option></select>
-                  </label>
+                  <fieldset className="effect-control">
+                    <legend>Effect</legend>
+                    <div className="effect-options">
+                      {EFFECTS.map((item) => (
+                        <button key={item.id} type="button" className={effect === item.id ? "selected" : ""} aria-pressed={effect === item.id} onClick={() => setEffect(item.id)}>
+                          <strong>{item.label}</strong>
+                          <span>{item.detail}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
 
                   <label className="range-control">
                     <span>Pixel size <output>{pixelSize} px</output></span>

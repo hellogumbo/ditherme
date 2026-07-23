@@ -55,7 +55,7 @@ button, select, input { accent-color: var(--acid); }
 }
 
 .masthead {
-  min-height: 82px;
+  min-height: 64px;
   border-bottom: 3px solid var(--ink);
   display: grid;
   grid-template-columns: 1fr auto;
@@ -109,11 +109,11 @@ button, select, input { accent-color: var(--acid); }
 .github-link:hover { color: var(--paper); background: var(--ink); }
 
 .intro {
-  padding: clamp(28px, 3.3vw, 50px) 0 clamp(24px, 3vw, 42px);
+  padding: 14px 0 18px;
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(280px, .55fr);
   grid-template-areas: "eyebrow lede" "heading lede";
-  gap: 10px 7vw;
+  gap: 6px 7vw;
   align-items: center;
 }
 
@@ -130,8 +130,8 @@ h1 {
   grid-area: heading;
   margin: 0;
   font-family: "PP Mondwest", sans-serif;
-  font-size: clamp(46px, 6.1vw, 96px);
-  line-height: .84;
+  font-size: clamp(38px, 4.6vw, 70px);
+  line-height: .88;
   letter-spacing: -.06em;
   text-wrap: balance;
 }
@@ -143,8 +143,8 @@ h1 span { color: var(--acid); }
   margin: 0;
   padding-bottom: 4px;
   max-width: 42ch;
-  font-size: clamp(13px, 1.15vw, 17px);
-  line-height: 1.65;
+  font-size: clamp(11px, 1vw, 14px);
+  line-height: 1.5;
 }
 
 .studio {
@@ -154,7 +154,7 @@ h1 span { color: var(--acid); }
 .camera-card {
   position: relative;
   width: 100%;
-  height: min(74vh, 840px);
+  height: min(calc(100svh - 152px), 840px);
   min-height: 560px;
   overflow: hidden;
   border: 4px solid var(--ink);
@@ -224,14 +224,29 @@ h1 span { color: var(--acid); }
 .live-chip i { width: 8px; height: 8px; border-radius: 50%; background: #838474; }
 .live-chip i.active { background: var(--acid); box-shadow: 0 0 0 4px color-mix(in srgb, var(--acid) 20%, transparent); animation: pulse 1.6s steps(2) infinite; }
 
+.camera-gate {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 24px;
+  color: var(--paper);
+  background: rgba(23, 26, 20, .62);
+  backdrop-filter: blur(4px) saturate(.55);
+}
+.camera-gate p { margin: 0; font-size: 11px; letter-spacing: .04em; }
+
 .control-card {
   position: absolute;
   z-index: 5;
-  top: 22px;
-  right: 22px;
-  bottom: 22px;
-  width: min(370px, calc(100% - 44px));
-  padding: 20px;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: min(390px, calc(100% - 24px));
+  padding: 16px;
   border: 2px solid var(--ink);
   border-radius: 8px;
   overflow: auto;
@@ -261,23 +276,21 @@ h1 span { color: var(--acid); }
 .control-heading button:hover { color: var(--paper); background: var(--ink); }
 
 .control-body { padding-top: 2px; }
-.select-control, .range-control { display: block; padding: 14px 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 28%, transparent); }
-.select-control > span, .range-control > span, .toggle-control > span { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.range-control { display: block; padding: 10px 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 28%, transparent); }
+.range-control > span, .toggle-control > span { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 
-select {
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px 12px;
-  border: 2px solid var(--ink);
-  border-radius: 6px;
-  color: var(--ink);
-  background: var(--cream);
-  font-weight: 700;
-}
+.effect-control { margin: 0; padding: 11px 0; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 28%, transparent); }
+.effect-control legend { padding: 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.effect-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 9px; }
+.effect-options button { min-width: 0; padding: 9px 6px; border: 1px solid var(--ink); border-radius: 4px; display: grid; gap: 3px; color: var(--ink); background: transparent; text-align: left; cursor: pointer; }
+.effect-options button strong { font-size: 11px; }
+.effect-options button span { overflow: hidden; color: var(--muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.effect-options button.selected { color: var(--ink); background: var(--acid); box-shadow: inset 0 0 0 1px var(--ink); }
+.effect-options button.selected span { color: color-mix(in srgb, var(--ink) 70%, transparent); }
 
 output { color: var(--muted); }
-input[type="range"] { width: 100%; margin: 14px 0 0; cursor: ew-resize; }
-.toggle-control { position: relative; display: grid; grid-template-columns: 1fr 48px; align-items: center; padding: 15px 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 28%, transparent); cursor: pointer; }
+input[type="range"] { width: 100%; margin: 10px 0 0; cursor: ew-resize; }
+.toggle-control { position: relative; display: grid; grid-template-columns: 1fr 48px; align-items: center; padding: 11px 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 28%, transparent); cursor: pointer; }
 .toggle-control input { position: absolute; opacity: 0; }
 .toggle-control i { position: relative; width: 48px; height: 27px; border: 2px solid var(--ink); border-radius: 99px; background: var(--cream); transition: background 140ms ease; }
 .toggle-control i::after { content: ""; position: absolute; top: 3px; left: 4px; width: 17px; height: 17px; border-radius: 50%; background: var(--ink); transition: transform 140ms ease; }
@@ -306,46 +319,47 @@ input[type="range"] { width: 100%; margin: 14px 0 0; cursor: ew-resize; }
 .camera-button:disabled { opacity: .58; cursor: wait; }
 .camera-button b { font-family: inherit; font-size: 31px; }
 .stage-camera-button {
-  position: absolute;
-  z-index: 4;
-  top: 50%;
-  left: 50%;
-  width: auto;
-  min-width: 230px;
+  position: static;
+  width: min(370px, 78vw);
+  min-height: 92px;
   margin: 0;
   justify-content: center;
   gap: 12px;
-  transform: translate(-50%, -50%);
-  border-color: var(--paper);
+  border: 3px solid var(--paper);
+  color: var(--ink);
+  background: var(--acid);
+  font-size: 32px;
 }
+.stage-camera-button svg { width: 30px; height: 30px; }
+.stage-camera-button:hover:not(:disabled) { color: var(--paper); background: var(--ink); }
 .panel-camera-button { margin: 14px 0 2px; }
 
 .privacy { margin: 12px 0 0; color: var(--muted); text-align: center; font-size: 9px; line-height: 1.5; }
 
-.color-control, .capture-control { padding: 15px 0; border-bottom: 1px solid #e8e8e8; }
+.color-control, .capture-control { padding: 11px 0; border-bottom: 1px solid #e8e8e8; }
 .capture-control { border-bottom: 0; padding-bottom: 0; }
-.control-label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.control-label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 9px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .control-label output { font-weight: 400; }
 
 .color-well {
   position: relative;
-  min-height: 54px;
-  padding: 8px;
+  min-height: 44px;
+  padding: 6px;
   border: 1px solid #d0d0d0;
   border-radius: 6px;
   display: grid;
-  grid-template-columns: 38px 1fr;
+  grid-template-columns: 30px 1fr;
   align-items: center;
   gap: 12px;
   cursor: pointer;
   background: white;
 }
 .color-well input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-.color-well > span { width: 38px; height: 38px; border: 2px solid var(--ink); border-radius: 4px; }
+.color-well > span { width: 30px; height: 30px; border: 2px solid var(--ink); border-radius: 4px; }
 .color-well b { font-size: 12px; }
 .color-well:focus-within { outline: 4px solid var(--gumbo-blue); outline-offset: 3px; }
 
-.swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin-top: 12px; }
+.swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin-top: 9px; }
 .swatches button { aspect-ratio: 1; min-width: 0; border: 2px solid var(--ink); border-radius: 4px; cursor: pointer; }
 .swatches button.selected { outline: 3px solid var(--gumbo-blue); outline-offset: 2px; }
 
@@ -385,15 +399,18 @@ footer a:hover { color: var(--gumbo-blue); }
 }
 
 @media (max-width: 600px) {
-  .app-shell { padding: 0 18px 24px; background-size: 28px 28px; }
-  .masthead { grid-template-columns: 1fr auto; }
-  .intro { padding: 24px 0 20px; }
-  .eyebrow { font-size: 10px; }
-  h1 { font-size: clamp(40px, 13vw, 64px); line-height: .83; }
-  .lede { font-size: 11px; line-height: 1.5; }
-  .camera-card { height: 68svh; min-height: 480px; border-width: 3px; border-radius: 12px; }
+  .app-shell { padding: 0 10px 10px; background-size: 28px 28px; }
+  .masthead { min-height: 56px; grid-template-columns: 1fr auto; border-bottom-width: 2px; }
+  .wordmark { font-size: 25px; }
+  .gumbo-by svg { width: 46px; }
+  .github-link { width: 36px; height: 36px; }
+  .intro { display: none; }
+  .studio { padding-top: 10px; }
+  .camera-card { height: calc(100svh - 76px); min-height: 0; border-width: 3px; border-radius: 10px; }
   .preview-topline { left: 14px; right: 14px; top: 13px; font-size: 9px; }
-  .live-chip { left: 13px; bottom: 76px; font-size: 8px; }
+  .live-chip { left: 13px; bottom: 66px; max-width: calc(100% - 26px); overflow: hidden; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+  .camera-gate { gap: 12px; padding: 16px; }
+  .camera-gate p { max-width: 28ch; font-size: 9px; text-align: center; }
   .control-card,
   .control-card.is-closed {
     top: auto;
@@ -401,30 +418,32 @@ footer a:hover { color: var(--gumbo-blue); }
     bottom: 8px;
     left: 8px;
     width: auto;
-    max-height: 64%;
-    padding: 12px;
+    max-height: 58%;
+    padding: 10px;
     border-width: 2px;
     border-radius: 8px;
   }
   .control-heading { padding-bottom: 9px; font-size: 20px; }
   .control-card.is-closed .control-heading { padding-bottom: 0; }
   .panel-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; }
-  .select-control, .range-control { padding: 10px 0; }
-  .select-control > span, .range-control > span, .toggle-control > span, .control-label { font-size: 9px; }
-  select { margin-top: 8px; padding: 8px; font-size: 10px; }
-  input[type="range"] { margin-top: 10px; }
-  .toggle-control { padding: 10px 0; }
-  .color-control { grid-column: 1 / -1; padding: 11px 0; }
+  .effect-control { grid-column: 1 / -1; padding: 8px 0; }
+  .effect-options { margin-top: 6px; }
+  .effect-options button { padding: 7px 6px; }
+  .range-control { padding: 7px 0; }
+  .range-control > span, .toggle-control > span, .control-label, .effect-control legend { font-size: 9px; }
+  input[type="range"] { margin-top: 7px; }
+  .toggle-control { padding: 7px 0; }
+  .color-control { grid-column: 1 / -1; padding: 8px 0; }
   .color-well { min-height: 44px; grid-template-columns: 30px 1fr; }
   .color-well > span { width: 30px; height: 30px; }
   .swatches { grid-template-columns: repeat(5, 32px); }
   .swatches button { width: 32px; }
   .panel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
-  .camera-button { min-height: 48px; font-size: 17px; }
-  .stage-camera-button { min-width: 190px; margin: 0; }
-  .panel-camera-button { margin: 10px 0 0; }
+  .camera-button { min-height: 44px; font-size: 16px; }
+  .stage-camera-button { width: min(280px, 82vw); min-height: 70px; margin: 0; font-size: 24px; }
+  .panel-camera-button { margin: 7px 0 0; }
   .capture-control { padding: 0; border: 0; }
-  .capture-button, .download-button { min-height: 48px; font-size: 10px; }
+  .capture-button, .download-button { min-height: 44px; font-size: 10px; }
   .privacy { grid-column: 1 / -1; margin-top: 0; }
   .capture-result img { display: none; }
   .retake-button { min-height: 36px; font-size: 9px; }
