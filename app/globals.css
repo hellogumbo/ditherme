@@ -149,13 +149,15 @@ h1 span { color: var(--acid); }
 
 .studio {
   width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 .camera-card {
   position: relative;
   width: 100%;
-  height: min(calc(100svh - 152px), 840px);
-  min-height: 560px;
+  height: auto;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 4px solid var(--ink);
   border-radius: 16px;
@@ -462,7 +464,7 @@ footer a:hover { color: var(--gumbo-blue); }
   .github-link { width: 36px; height: 36px; }
   .intro { display: none; }
   .studio { padding-top: 10px; }
-  .camera-card { height: calc(100svh - 76px); min-height: 0; border-width: 3px; border-radius: 10px; }
+  .camera-card { height: auto; aspect-ratio: 4 / 5; border-width: 3px; border-radius: 10px; }
   .preview-topline { left: 14px; right: 14px; top: 13px; font-size: 9px; }
   .live-chip { left: 13px; bottom: 66px; max-width: calc(100% - 26px); overflow: hidden; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
   .camera-gate { gap: 12px; padding: 16px; }
