@@ -11,6 +11,7 @@ const BAYER_4X4 = [
 
 type CameraState = "idle" | "requesting" | "live" | "error";
 type DitherEffect = "bayer" | "floyd" | "threshold";
+type CaptureResult = { url: string; kind: "photo" | "gif"; size: number; filename: string };
 
 const COLOR_PRESETS = ["#c8ff3d", "#2563eb", "#d65c73", "#6a9d62", "#f97316"];
 const EFFECTS: Array<{ id: DitherEffect; label: string; detail: string }> = [
@@ -19,6 +20,8 @@ const EFFECTS: Array<{ id: DitherEffect; label: string; detail: string }> = [
   { id: "threshold", label: "Hard", detail: "threshold" },
 ];
 const GUMBO_URL = "https://hellogumbo.com/?utm_source=ditherme&utm_medium=referral&utm_campaign=open_source";
+const GIF_DURATION_SECONDS = 5;
+const GIF_FRAMES_PER_SECOND = 10;
 
 function hexToRgb(hex: string) {
   const normalized = hex.replace("#", "");
@@ -160,14 +163,20 @@ export default function Home() {
   const [threshold, setThreshold] = useState(128);
   const [mirrored, setMirrored] = useState(true);
   const [accentColor, setAccentColor] = useState("#c8ff3d");
-  const [captureUrl, setCaptureUrl] = useState<string | null>(null);
+  const [captureResult, setCaptureResult] = useState<CaptureResult | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [countdownAction, setCountdownAction] = useState<"photo" | "gif" | null>(null);
+  const [recordingRemaining, setRecordingRemaining] = useState<number | null>(null);
+  const [isEncodingGif, setIsEncodingGif] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [effect, setEffect] = useState<DitherEffect>("bayer");
 
   const stopCamera = useCallback(() => {
     captureRunRef.current += 1;
     setCountdown(null);
+    setCountdownAction(null);
+    setRecordingRemaining(null);
+    setIsEncodingGif(false);
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
@@ -196,8 +205,25 @@ export default function Home() {
   }, [accentColor, cameraState, contrast, effect, pixelSize, threshold]);
 
   useEffect(() => () => {
-    if (captureUrl) URL.revokeObjectURL(captureUrl);
-  }, [captureUrl]);
+    if (captureResult) URL.revokeObjectURL(captureResult.url);
+  }, [captureResult]);
+
+  const runCountdown = async (captureRun: number, action: "photo" | "gif") => {
+    setCountdownAction(action);
+    for (const count of [3, 2, 1]) {
+      setCountdown(count);
+      await new Promise((resolve) => window.setTimeout(resolve, 1000));
+      if (captureRunRef.current !== captureRun) return false;
+      if (!streamRef.current?.active) {
+        setCountdown(null);
+        setCountdownAction(null);
+        return false;
+      }
+    }
+    setCountdown(null);
+    setCountdownAction(null);
+    return true;
+  };
 
   const startCamera = async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -229,19 +255,10 @@ export default function Home() {
   const capturePhoto = async () => {
     const source = canvasRef.current;
     const video = videoRef.current;
-    if (!source || !video || cameraState !== "live" || countdown !== null) return;
+    if (!source || !video || cameraState !== "live" || countdown !== null || recordingRemaining !== null || isEncodingGif) return;
 
     const captureRun = ++captureRunRef.current;
-    for (const count of [3, 2, 1]) {
-      setCountdown(count);
-      await new Promise((resolve) => window.setTimeout(resolve, 1000));
-      if (captureRunRef.current !== captureRun) return;
-      if (!streamRef.current?.active) {
-        setCountdown(null);
-        return;
-      }
-    }
-    setCountdown(null);
+    if (!await runCountdown(captureRun, "photo")) return;
 
     const output = document.createElement("canvas");
     output.width = video.videoWidth;
@@ -257,12 +274,94 @@ export default function Home() {
     context.drawImage(source, 0, 0, output.width, output.height);
     output.toBlob((blob) => {
       if (!blob) return;
-      setCaptureUrl((current) => {
-        if (current) URL.revokeObjectURL(current);
-        return URL.createObjectURL(blob);
+      setCaptureResult((current) => {
+        if (current) URL.revokeObjectURL(current.url);
+        return { url: URL.createObjectURL(blob), kind: "photo", size: blob.size, filename: `dither-me-${Date.now()}.png` };
       });
     }, "image/png");
   };
+
+  const captureGif = async () => {
+    const source = canvasRef.current;
+    if (!source || !source.width || !source.height || cameraState !== "live" || countdown !== null || recordingRemaining !== null || isEncodingGif) return;
+
+    const captureRun = ++captureRunRef.current;
+    let failed = false;
+    try {
+      const { GIFEncoder, applyPalette } = await import("gifenc");
+      if (!await runCountdown(captureRun, "gif")) return;
+
+      const outputWidth = 320;
+      const outputHeight = Math.max(1, Math.round(source.height * (outputWidth / source.width)));
+      const output = document.createElement("canvas");
+      output.width = outputWidth;
+      output.height = outputHeight;
+      const context = output.getContext("2d", { willReadFrequently: true });
+      if (!context) return;
+
+      const accent = hexToRgb(accentColor);
+      const palette = [[23, 26, 20], [accent.r, accent.g, accent.b]];
+      const gif = GIFEncoder();
+      const totalFrames = GIF_DURATION_SECONDS * GIF_FRAMES_PER_SECOND;
+      const frameDelay = 1000 / GIF_FRAMES_PER_SECOND;
+      const startedAt = performance.now();
+
+      setRecordingRemaining(GIF_DURATION_SECONDS);
+      setMessage("Recording GIF · no audio");
+
+      for (let frame = 0; frame < totalFrames; frame += 1) {
+        if (captureRunRef.current !== captureRun || !streamRef.current?.active) return;
+
+        context.save();
+        context.imageSmoothingEnabled = false;
+        if (mirrored) {
+          context.translate(outputWidth, 0);
+          context.scale(-1, 1);
+        }
+        context.drawImage(source, 0, 0, outputWidth, outputHeight);
+        context.restore();
+
+        const rgba = context.getImageData(0, 0, outputWidth, outputHeight).data;
+        const indexedFrame = applyPalette(rgba, palette);
+        gif.writeFrame(indexedFrame, outputWidth, outputHeight, {
+          palette: frame === 0 ? palette : undefined,
+          delay: frameDelay,
+          repeat: 0,
+        });
+
+        setRecordingRemaining(Math.max(1, Math.ceil((totalFrames - frame - 1) / GIF_FRAMES_PER_SECOND)));
+        const wait = Math.max(0, startedAt + (frame + 1) * frameDelay - performance.now());
+        await new Promise((resolve) => window.setTimeout(resolve, wait));
+      }
+
+      if (captureRunRef.current !== captureRun) return;
+      setRecordingRemaining(null);
+      setIsEncodingGif(true);
+      setMessage("Finishing GIF…");
+      gif.finish();
+      const gifBytes = gif.bytes();
+      const gifBuffer = new ArrayBuffer(gifBytes.byteLength);
+      new Uint8Array(gifBuffer).set(gifBytes);
+      const blob = new Blob([gifBuffer], { type: "image/gif" });
+      setCaptureResult((current) => {
+        if (current) URL.revokeObjectURL(current.url);
+        return { url: URL.createObjectURL(blob), kind: "gif", size: blob.size, filename: `dither-me-${Date.now()}.gif` };
+      });
+    } catch {
+      failed = true;
+      setMessage("GIF capture could not be completed");
+    } finally {
+      if (captureRunRef.current === captureRun) {
+        setCountdown(null);
+        setCountdownAction(null);
+        setRecordingRemaining(null);
+        setIsEncodingGif(false);
+        if (!failed && streamRef.current?.active) setMessage("Live · processed on this device");
+      }
+    }
+  };
+
+  const captureBusy = countdown !== null || recordingRemaining !== null || isEncodingGif;
 
   return (
     <main className="app-shell" style={{ "--acid": accentColor } as CSSProperties}>
@@ -288,9 +387,12 @@ export default function Home() {
           <canvas ref={canvasRef} className="dither-canvas" aria-label="Live dithered camera preview" />
           <canvas ref={scratchRef} className="scratch-canvas" aria-hidden="true" />
           {countdown !== null && (
-            <div className="capture-countdown" role="status" aria-live="assertive" aria-label={`Taking photo in ${countdown}`}>
+            <div className="capture-countdown" role="status" aria-live="assertive" aria-label={`${countdownAction === "gif" ? "Recording GIF" : "Taking photo"} in ${countdown}`}>
               <span key={countdown}>{countdown}</span>
             </div>
+          )}
+          {recordingRemaining !== null && (
+            <div className="recording-status" role="status" aria-live="polite"><i /> GIF · {recordingRemaining}s</div>
           )}
           {cameraState !== "live" && (
             <div className="camera-placeholder" aria-hidden="true">
@@ -335,7 +437,7 @@ export default function Home() {
                   </button>
                 )}
 
-                <div className="panel-fields">
+                <fieldset className="panel-fields" disabled={captureBusy}>
                   <fieldset className="effect-control">
                     <legend>Effect</legend>
                     <div className="effect-options">
@@ -382,19 +484,23 @@ export default function Home() {
                       ))}
                     </div>
                   </div>
-                </div>
+                </fieldset>
 
                 <div className="panel-actions">
                   <div className="capture-control">
-                    {captureUrl ? (
+                    {captureResult ? (
                       <div className="capture-result">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={captureUrl} alt="Your captured dithered photo" />
-                        <a className="download-button" href={captureUrl} download={`dither-me-${Date.now()}.png`}><span><DownloadIcon /> Download image</span></a>
-                        <button className="retake-button" type="button" onClick={capturePhoto} disabled={countdown !== null}>Capture another</button>
+                        <img src={captureResult.url} alt={`Your captured dithered ${captureResult.kind === "gif" ? "animation" : "photo"}`} />
+                        <p className="capture-meta">{captureResult.kind === "gif" ? "5 second GIF" : "PNG photo"} · {Math.max(1, Math.round(captureResult.size / 1024))} KB</p>
+                        <a className="download-button" href={captureResult.url} download={captureResult.filename}><span><DownloadIcon /> Download {captureResult.kind === "gif" ? "GIF" : "image"}</span></a>
+                        <button className="retake-button" type="button" onClick={() => setCaptureResult(null)}>New capture</button>
                       </div>
                     ) : (
-                      <button className="capture-button" type="button" onClick={capturePhoto} disabled={cameraState !== "live" || countdown !== null}><CameraIcon /> {countdown !== null ? `Capturing in ${countdown}…` : "Capture photo"}</button>
+                      <div className="capture-buttons">
+                        <button className="capture-button" type="button" onClick={capturePhoto} disabled={cameraState !== "live" || captureBusy}><CameraIcon /> Capture photo</button>
+                        <button className="capture-button gif-button" type="button" onClick={captureGif} disabled={cameraState !== "live" || captureBusy}><i aria-hidden="true" /> {recordingRemaining !== null ? `Recording ${recordingRemaining}s` : isEncodingGif ? "Finishing…" : "Make 5s GIF"}</button>
+                      </div>
                     )}
                   </div>
                   <p className="privacy">Private by default. Nothing leaves this device.</p>

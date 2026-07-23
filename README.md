@@ -6,9 +6,9 @@
 
 ![dither me — real-time browser dithering](./public/og.png)
 
-`dither me` turns a live camera feed into a moving Bayer-dither portrait directly in the browser. Adjust the texture, choose the ink color, capture a frame, and download it as a PNG.
+`dither me` turns a live camera feed into a moving dithered portrait directly in the browser. Adjust the texture, choose the ink color, capture a frame, or make a five-second animated GIF.
 
-Nothing is recorded. Nothing is uploaded.
+Nothing is uploaded. Photos and GIFs stay on your device.
 
 ## What it does
 
@@ -18,12 +18,13 @@ Nothing is recorded. Nothing is uploaded.
 - Changes the dither ink color with a picker and preset palette
 - Mirrors the camera for a natural selfie view
 - Captures the processed frame and downloads it as a PNG
+- Records a lightweight, silent five-second animated GIF at 10 frames per second
 - Keeps controls in a collapsible overlay so the image stays front and center
 - Adapts the controls into a compact expandable panel on mobile
 
 ## Privacy
 
-Camera access happens through the browser's `getUserMedia` API. Video frames are processed locally on the device and drawn to a canvas. The app has no upload, recording, account, analytics, or storage flow.
+Camera access happens through the browser's `getUserMedia` API. Video frames are processed locally on the device and drawn to a canvas. Photos and GIF frames are encoded in the browser and are never uploaded. The app has no account, analytics, or remote storage flow.
 
 ## Run it locally
 
@@ -56,6 +57,7 @@ Each video frame is sampled at the selected pixel size, converted to luminance, 
 - [React 19](https://react.dev)
 - [Next.js 16](https://nextjs.org)
 - Canvas API and `getUserMedia`
+- [gifenc](https://github.com/mattdesl/gifenc)
 - [Canvas UI — Dithered Object](https://canvasui.dev/docs/components/dithered-object)
 - PP Mondwest and PP Neue Montreal Mono
 

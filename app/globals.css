@@ -194,6 +194,27 @@ h1 span { color: var(--acid); }
   text-shadow: 8px 8px 0 var(--ink);
   animation: countdown-pop 1s steps(5, end) both;
 }
+.recording-status {
+  position: absolute;
+  z-index: 6;
+  top: 56px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  border: 2px solid var(--paper);
+  border-radius: 999px;
+  color: var(--paper);
+  background: rgba(23, 26, 20, .88);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.recording-status i { width: 9px; height: 9px; border-radius: 50%; background: #ff4d4d; animation: pulse 1s steps(2) infinite; }
 
 .camera-placeholder {
   position: absolute;
@@ -356,6 +377,8 @@ input[type="range"] { width: 100%; margin: 10px 0 0; cursor: ew-resize; }
 .privacy { margin: 12px 0 0; color: var(--muted); text-align: center; font-size: 9px; line-height: 1.5; }
 
 .color-control, .capture-control { padding: 11px 0; border-bottom: 1px solid #e8e8e8; }
+.panel-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
+.panel-fields:disabled { opacity: .65; }
 .capture-control { border-bottom: 0; padding-bottom: 0; }
 .control-label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 9px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .control-label output { font-weight: 400; }
@@ -393,14 +416,19 @@ input[type="range"] { width: 100%; margin: 10px 0 0; cursor: ew-resize; }
   font-weight: 700;
   text-decoration: none;
 }
+.capture-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .capture-button, .download-button { margin-top: 0; border: 1px solid var(--gumbo-blue); color: white; background: var(--gumbo-blue); cursor: pointer; }
 .capture-button:hover:not(:disabled), .download-button:hover { background: var(--gumbo-blue-dark); }
 .capture-button:disabled { border-color: #b9b9b9; color: #727272; background: #e8e8e8; cursor: not-allowed; }
+.gif-button { border-color: var(--ink); color: var(--ink); background: var(--acid); }
+.gif-button:hover:not(:disabled) { color: var(--paper); background: var(--ink); }
+.gif-button > i { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
 .download-button span { display: flex; align-items: center; gap: 9px; }
 .retake-button { min-height: 40px; margin-top: 8px; border: 1px solid var(--ink); color: var(--ink); background: transparent; cursor: pointer; }
 .retake-button:hover { background: #f3f3f3; }
 .retake-button:disabled { color: #727272; background: #e8e8e8; cursor: not-allowed; }
 .capture-result img { display: block; width: 100%; max-height: 170px; aspect-ratio: 4 / 3; border: 1px solid #d0d0d0; border-radius: 6px; object-fit: cover; image-rendering: pixelated; background: var(--ink); }
+.capture-meta { margin: 7px 0; color: var(--muted); font-size: 9px; text-align: center; text-transform: uppercase; }
 
 footer { min-height: 130px; display: flex; align-items: center; justify-content: space-between; gap: 24px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
 .footer-credits { display: flex; flex-wrap: wrap; gap: 8px 20px; }
@@ -471,6 +499,8 @@ footer a:hover { color: var(--gumbo-blue); }
   .stage-camera-button { width: min(280px, 82vw); min-height: 70px; margin: 0; font-size: 24px; }
   .panel-camera-button { margin: 7px 0 0; }
   .capture-control { padding: 0; border: 0; }
+  .capture-control { grid-column: 1 / -1; }
+  .capture-buttons { gap: 6px; }
   .capture-button, .download-button { min-height: 44px; font-size: 10px; }
   .privacy { grid-column: 1 / -1; margin-top: 0; }
   .capture-result img { display: none; }
