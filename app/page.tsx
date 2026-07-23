@@ -152,6 +152,7 @@ export default function Home() {
   const scratchRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const frameRef = useRef<number | null>(null);
+  const captureRunRef = useRef(0);
   const [cameraState, setCameraState] = useState<CameraState>("idle");
   const [message, setMessage] = useState("Ready when you are");
   const [pixelSize, setPixelSize] = useState(6);
@@ -160,10 +161,13 @@ export default function Home() {
   const [mirrored, setMirrored] = useState(true);
   const [accentColor, setAccentColor] = useState("#c8ff3d");
   const [captureUrl, setCaptureUrl] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [effect, setEffect] = useState<DitherEffect>("bayer");
 
   const stopCamera = useCallback(() => {
+    captureRunRef.current += 1;
+    setCountdown(null);
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
@@ -222,10 +226,22 @@ export default function Home() {
     }
   };
 
-  const capturePhoto = () => {
+  const capturePhoto = async () => {
     const source = canvasRef.current;
     const video = videoRef.current;
-    if (!source || !video || cameraState !== "live") return;
+    if (!source || !video || cameraState !== "live" || countdown !== null) return;
+
+    const captureRun = ++captureRunRef.current;
+    for (const count of [3, 2, 1]) {
+      setCountdown(count);
+      await new Promise((resolve) => window.setTimeout(resolve, 1000));
+      if (captureRunRef.current !== captureRun) return;
+      if (!streamRef.current?.active) {
+        setCountdown(null);
+        return;
+      }
+    }
+    setCountdown(null);
 
     const output = document.createElement("canvas");
     output.width = video.videoWidth;
@@ -271,6 +287,11 @@ export default function Home() {
           <video ref={videoRef} className="source-video" muted playsInline aria-hidden="true" />
           <canvas ref={canvasRef} className="dither-canvas" aria-label="Live dithered camera preview" />
           <canvas ref={scratchRef} className="scratch-canvas" aria-hidden="true" />
+          {countdown !== null && (
+            <div className="capture-countdown" role="status" aria-live="assertive" aria-label={`Taking photo in ${countdown}`}>
+              <span key={countdown}>{countdown}</span>
+            </div>
+          )}
           {cameraState !== "live" && (
             <div className="camera-placeholder" aria-hidden="true">
               <div className="orb orb-one" />
@@ -370,10 +391,10 @@ export default function Home() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={captureUrl} alt="Your captured dithered photo" />
                         <a className="download-button" href={captureUrl} download={`dither-me-${Date.now()}.png`}><span><DownloadIcon /> Download image</span></a>
-                        <button className="retake-button" type="button" onClick={capturePhoto}>Capture another</button>
+                        <button className="retake-button" type="button" onClick={capturePhoto} disabled={countdown !== null}>Capture another</button>
                       </div>
                     ) : (
-                      <button className="capture-button" type="button" onClick={capturePhoto} disabled={cameraState !== "live"}><CameraIcon /> Capture photo</button>
+                      <button className="capture-button" type="button" onClick={capturePhoto} disabled={cameraState !== "live" || countdown !== null}><CameraIcon /> {countdown !== null ? `Capturing in ${countdown}…` : "Capture photo"}</button>
                     )}
                   </div>
                   <p className="privacy">Private by default. Nothing leaves this device.</p>

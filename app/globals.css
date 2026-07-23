@@ -176,6 +176,25 @@ h1 span { color: var(--acid); }
 .camera-card.is-mirrored .dither-canvas { transform: scaleX(-1); }
 .source-video, .scratch-canvas { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
+.capture-countdown {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--acid);
+  background: rgba(23, 26, 20, .38);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+}
+.capture-countdown span {
+  font-family: "PP Mondwest", sans-serif;
+  font-size: clamp(140px, 28vw, 320px);
+  line-height: .7;
+  text-shadow: 8px 8px 0 var(--ink);
+  animation: countdown-pop 1s steps(5, end) both;
+}
+
 .camera-placeholder {
   position: absolute;
   inset: 0;
@@ -380,6 +399,7 @@ input[type="range"] { width: 100%; margin: 10px 0 0; cursor: ew-resize; }
 .download-button span { display: flex; align-items: center; gap: 9px; }
 .retake-button { min-height: 40px; margin-top: 8px; border: 1px solid var(--ink); color: var(--ink); background: transparent; cursor: pointer; }
 .retake-button:hover { background: #f3f3f3; }
+.retake-button:disabled { color: #727272; background: #e8e8e8; cursor: not-allowed; }
 .capture-result img { display: block; width: 100%; max-height: 170px; aspect-ratio: 4 / 3; border: 1px solid #d0d0d0; border-radius: 6px; object-fit: cover; image-rendering: pixelated; background: var(--ink); }
 
 footer { min-height: 130px; display: flex; align-items: center; justify-content: space-between; gap: 24px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
@@ -394,6 +414,12 @@ footer a:hover { color: var(--gumbo-blue); }
 :focus-visible { outline: 4px solid var(--gumbo-blue); outline-offset: 4px; }
 
 @keyframes pulse { 50% { opacity: .45; } }
+@keyframes countdown-pop {
+  0% { opacity: 0; transform: scale(.72); }
+  18% { opacity: 1; transform: scale(1); }
+  82% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.08); }
+}
 
 @media (max-width: 900px) {
   .intro { grid-template-columns: 1fr; grid-template-areas: "eyebrow" "heading" "lede"; gap: 10px; }
